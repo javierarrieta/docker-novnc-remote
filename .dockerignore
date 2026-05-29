@@ -1,0 +1,20 @@
+# Version control
+.git
+.gitignore
+
+# IDE / editor files
+.idea
+.vscode
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Documentation (not needed in image)
+LICENSE
+README.md
+
+# Workflows (not needed in image)
+.github
