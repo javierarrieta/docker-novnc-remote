@@ -1,28 +1,31 @@
 ARG BASE_IMAGE=alpine:latest
 FROM ${BASE_IMAGE}
 
-ARG NO_VNC_VERSION=1.4.0
-ARG WEBSOCKIFY_VERSION=1.0.0
+ARG NODE_VERSION=22
 
+# Install Node.js and required tools for build
 RUN apk update && \
     apk upgrade --no-cache && \
     apk add --no-cache \
-        novnc=${NO_VNC_VERSION} \
-        websockify=${WEBSOCKIFY_VERSION} && \
+        nodejs-${NODE_VERSION} \
+        npm \
+        wget && \
     rm -rf /var/cache/apk/*
 
+# Install novnc and websockify via npm (they are Node.js packages, not Alpine packages)
+RUN npm install -g novnc@1.2.0 websockify@0.7.1
+
 ENV VNC_HOST=localhost:5900 \
-    VNC_PORT=5900 \
-    NOVNC_PORT=8080 \
-    USER=novnc \
-    GROUP=novnc
+    NOVNC_PORT=8080
 
-RUN addgroup -S ${GROUP} && \
-    adduser -S -D -H -g '' -h /home/${USER} -s /sbin/nologin -G ${GROUP} ${USER}
+# Create non-root user
+RUN addgroup -S novnc && \
+    adduser -S -D -H -g '' -h /home/novnc -s /sbin/nologin -G novnc novnc
 
-COPY --chown=${USER}:${GROUP} ./files/ /app/
+# Install application files
+COPY --chown=novnc:novnc ./files/ /app/
 
-USER ${USER}
+USER novnc
 
 EXPOSE ${NOVNC_PORT}
 
