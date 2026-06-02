@@ -6,9 +6,9 @@ if ! command -v websockify >/dev/null 2>&1; then
     exit 1
 fi
 
-# Check if novnc is available
-if ! command -v novnc >/dev/null 2>&1; then
-    echo "ERROR: novnc is not installed" >&2
+# Check if novnc files are available
+if [ ! -d /usr/share/novnc ]; then
+    echo "ERROR: novnc files not found in /usr/share/novnc" >&2
     exit 1
 fi
 
