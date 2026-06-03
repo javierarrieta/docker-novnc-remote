@@ -1,0 +1,48 @@
+name: Docker test
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build container
+        run: docker build -t novnc-test .
+
+      - name: Run container
+        run: |
+          docker run -d --name novnc-test \
+            -e NOVNC_PORT=8080 \
+            -e VNC_HOST=localhost:5900 \
+            -p 8080:8080 \
+            novnc-test
+
+      - name: Wait for healthcheck
+        run: |
+          for i in $(seq 1 30); do
+            if curl -sf http://localhost:8080/ > /dev/null 2>&1; then
+              echo "Container is healthy"
+              exit 0
+            fi
+            echo "Waiting for container... ($i/30)"
+            sleep 2
+          done
+          echo "Container did not become healthy"
+          exit 1
+
+      - name: Check noVNC page loads
+        run: |
+          curl -sf http://localhost:8080/ > /dev/null 2>&1 || exit 1
+          curl -sf http://localhost:8080/vnc.html > /dev/null 2>&1 || exit 1
+
+      - name: Debug if failed
+        if: failure()
+        run: |
+          docker logs novnc-test
+          docker rm -f novnc-test
